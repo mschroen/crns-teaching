@@ -338,7 +338,7 @@ if "yaml_processor" in st.session_state:
             st.markdown(
                 ":material/info: Air humidity represents the number of hydrogen atoms in the air above and around the sensor. They attenuate the cosmic radiation from above and the neutron radiation from the sides. The factor to correct for this effect is linear:"
             )
-            st.latex(r"C_h = \alpha\,(h-h_\text{ref}),")
+            st.latex(r"C_h = 1+ \alpha\,(h-h_\text{ref}),")
             st.markdown(
                 r"where $\alpha$ = 0.0054 and $h_\text{ref}$ = 0 g/m³. See [Rosolem et al (2013)](https://doi.org/10.1175/JHM-D-12-0120.1) for details."
             )

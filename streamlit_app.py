@@ -95,7 +95,7 @@ if uploaded_file is not None:
 
     sensor_type = st.selectbox(
         "Type of sensor data:",
-        ("Hydroinnova/Quaesta", "Styx Neutronica"),
+        ("Hydroinnova/Quaesta"),
     )
 
     # import pandas as pd

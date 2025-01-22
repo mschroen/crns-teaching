@@ -1,0 +1,6 @@
+streamlit
+pandas
+neptoon
+plotly
+tempfile
+atexit

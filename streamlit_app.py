@@ -19,10 +19,10 @@ st.set_page_config(
 """
 # CRNS Data Processor (alpha)
 
-A simple Streamlit app to demonstrate exemplary CRNS data processing. Only for teaching purposes.
+A simple Streamlit app to demonstrate exemplary CRNS data processing, for teaching purposes only. This tool is based on the the [Neptoon code](https://www.neptoon.org), which is currently under intensive development. 
 
 *Authors: Daniel Power, Martin Schrön, Steffen Zacharias, Rafael Rosolem*  
-*Supported by Helmholtz Centre for Environmental Research, Leipzig, and University of Bristol, UK.*
+*Supported by Helmholtz Centre for Environmental Research, Leipzig, and University of Bristol, UK, and funding from [ENVRINNOV](https://envri.eu/envrinnov/) and [SOMMET](https://www.sommet-project.eu/home).*
 
 ## Data source
 

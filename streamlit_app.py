@@ -95,7 +95,7 @@ if uploaded_file is not None:
 
     sensor_type = st.selectbox(
         "Type of sensor data:",
-        ("Hydroinnova/Quaesta"),
+        ["Hydroinnova/Quaesta"],
     )
 
     # import pandas as pd
@@ -176,29 +176,31 @@ if "data_hub" in st.session_state:
     ## :material/search_insights: Data inspection
     """
 
-    tab1, tab2 = st.tabs(
-        [":material/Table: Raw data table", ":material/show_chart: Plots"]
-    )
-
-    tab1.dataframe(data_hub.crns_data_frame)
-
-    selected_columns = tab2.multiselect(
-        "Which columns would you like to view?",
-        options=data_hub.crns_data_frame.columns,
-        default="epithermal_neutrons_cph",
-    )
-
-    filtered_data = data_hub.crns_data_frame[selected_columns]
-
-    # st.line_chart(
-    #     data_hub.crns_data_frame,
-    #     y=selected_columns,
-    # )
     import plotly.express as px
 
-    tab2.plotly_chart(
-        px.line(filtered_data, y=selected_columns), use_container_width=True
-    )
+    @st.fragment
+    def df_raw_plot():
+        tab1, tab2 = st.tabs(
+            [":material/Table: Raw data table", ":material/show_chart: Plots"]
+        )
+
+        tab1.dataframe(data_hub.crns_data_frame)
+
+        selected_columns = tab2.multiselect(
+            "Which columns would you like to view?",
+            options=data_hub.crns_data_frame.columns,
+            default="epithermal_neutrons_cph",
+        )
+
+        filtered_data = data_hub.crns_data_frame[selected_columns]
+
+        tab2.plotly_chart(
+            px.line(filtered_data, y=selected_columns), use_container_width=True
+        )
+    
+    df_raw_plot()
+
+import plotly.graph_objects as go
 
 
 if "yaml_processor" in st.session_state:
@@ -215,74 +217,78 @@ if "yaml_processor" in st.session_state:
         HRMS=(-34.43, 19.23),
     )
 
-    col1, col2 = st.columns(2, vertical_alignment="top")
+    @st.fragment
+    def select_nm():
+        colnm1, colnm2 = st.columns(2, vertical_alignment="top")
 
-    nmdbstation_is = (
-        st.session_state.yaml_processor.process_config.correction_steps.incoming_radiation.reference_neutron_monitor.station
-    )
-    nmdbstation = col1.pills(
-        "Select a nearby high-energy neutron monitor",
-        options=stations.keys(),
-        default="JUNG",
-    )
-    if nmdbstation != nmdbstation_is:
-        st.session_state.yaml_processor.process_config.correction_steps.incoming_radiation.reference_neutron_monitor.station = (
-            nmdbstation
+        nmdbstation_is = (
+            st.session_state.yaml_processor.process_config.correction_steps.incoming_radiation.reference_neutron_monitor.station
+        )
+        nmdbstation = colnm1.pills(
+            "Select a nearby high-energy neutron monitor",
+            options=stations.keys(),
+            default="JUNG",
+        )
+        if nmdbstation != nmdbstation_is:
+            st.session_state.yaml_processor.process_config.correction_steps.incoming_radiation.reference_neutron_monitor.station = (
+                nmdbstation
+            )
+
+
+        fig = go.Figure(
+            go.Scattergeo(
+                lat=[ll[0] for ll in stations.values()],
+                lon=[ll[1] for ll in stations.values()],
+                marker=dict(color="blue"),
+                name="Available stations",
+            )
+        )
+        fig.add_trace(
+            go.Scattergeo(
+                lat=[stations[nmdbstation][0]],
+                lon=[stations[nmdbstation][1]],
+                marker=dict(color="orange"),
+                name="Selected station",
+            )
+        )
+        fig.add_trace(
+            go.Scattergeo(
+                lat=[st.session_state.yaml_processor.sensor_config.sensor_info.latitude],
+                lon=[st.session_state.yaml_processor.sensor_config.sensor_info.longitude],
+                marker=dict(color="red", symbol="star"),
+                name="CRNS location",
+            )
         )
 
-    import plotly.graph_objects as go
+        # editing the marker
+        fig.update_traces(marker_size=10)
 
-    fig = go.Figure(
-        go.Scattergeo(
-            lat=[ll[0] for ll in stations.values()],
-            lon=[ll[1] for ll in stations.values()],
-            marker=dict(color="blue"),
-            name="Available stations",
+        # this projection_type = 'orthographic is the projection which return 3d globe map'
+        fig.update_geos(
+            projection=dict(
+                type="orthographic",
+                rotation=dict(
+                    lat=stations[nmdbstation][0], lon=stations[nmdbstation][1]
+                ),  # , roll=15),
+            )
         )
-    )
-    fig.add_trace(
-        go.Scattergeo(
-            lat=[stations[nmdbstation][0]],
-            lon=[stations[nmdbstation][1]],
-            marker=dict(color="orange"),
-            name="Selected station",
+
+        # layout, exporting html and showing the plot
+        fig.update_layout(
+            height=200,
+            margin={"r": 0, "t": 0, "l": 0, "b": 0},
+            legend=dict(
+                yanchor="bottom",
+                y=0.0,
+            ),
         )
-    )
-    fig.add_trace(
-        go.Scattergeo(
-            lat=[st.session_state.yaml_processor.sensor_config.sensor_info.latitude],
-            lon=[st.session_state.yaml_processor.sensor_config.sensor_info.longitude],
-            marker=dict(color="red", symbol="star"),
-            name="CRNS location",
-        )
-    )
 
-    # editing the marker
-    fig.update_traces(marker_size=10)
+        colnm2.plotly_chart(fig)
 
-    # this projection_type = 'orthographic is the projection which return 3d globe map'
-    fig.update_geos(
-        projection=dict(
-            type="orthographic",
-            rotation=dict(
-                lat=stations[nmdbstation][0], lon=stations[nmdbstation][1]
-            ),  # , roll=15),
-        )
-    )
 
-    # layout, exporting html and showing the plot
-    fig.update_layout(
-        height=200,
-        margin={"r": 0, "t": 0, "l": 0, "b": 0},
-        legend=dict(
-            yanchor="bottom",
-            y=0.0,
-        ),
-    )
-
-    col2.plotly_chart(fig)
-
-    col11, col12 = col1.columns([2, 1])
+    select_nm()
+    
+    col11, col12 = st.columns([1, 2])
 
     if col11.button(":material/download: Attach cosmic-ray data", type="primary"):
         with st.spinner("Downloading from NMDB..."):
@@ -431,37 +437,43 @@ if ("yaml_processor" in st.session_state) and (
     """
     ## :material/adjust: Calibration
     """
-    st.write(
-        "To convert corrected neutrons to soil moisture, the calibration factor $N_0$ has to be determined. For that, field-average soil moisture needs to be determined independently on a certain day."
-    )
 
-    dt_min = data_hub.crns_data_frame.index.min()
-    dt_max = data_hub.crns_data_frame.index.max()
+    @st.fragment
+    def calibrate_no():
+        st.write(
+            "To convert corrected neutrons to soil moisture, the calibration factor $N_0$ has to be determined. For that, field-average soil moisture needs to be determined independently on a certain day."
+        )
 
-    col13, col14 = st.columns([1, 1])
-    calib_date = col13.date_input(
-        "When did you determine soil moisture?",
-        value=dt_min + (dt_max - dt_min) / 2,
-        min_value=dt_min,
-        max_value=dt_max,
-    )
-    calib_sm = col14.number_input(
-        label="Independently measured soil moisture",
-        step=0.01,
-        format="%.3f",
-        value=0.2,
-    )
+        dt_min = data_hub.crns_data_frame.index.min()
+        dt_max = data_hub.crns_data_frame.index.max()
 
-    matches = data_hub.crns_data_frame.index.get_indexer(
-        [pd.to_datetime(calib_date, utc=True)], method="nearest"
-    )
-    data_calib_N = data_hub.crns_data_frame.iloc[matches]
+        col13, col14 = st.columns([1, 1])
+        calib_date = col13.date_input(
+            "When did you determine soil moisture?",
+            value=dt_min + (dt_max - dt_min) / 2,
+            min_value=dt_min,
+            max_value=dt_max,
+        )
+        calib_sm = col13.number_input(
+            label="Independently measured soil moisture (m³/m³)",
+            step=0.01,
+            format="%.3f",
+            value=0.2,
+        )
 
-    calib_N = data_calib_N["corrected_epithermal_neutrons"]
-    N0 = calib_N / (0.0808 / (calib_sm + 0.115) + 0.372)
-    st.write("Estimated N0 = %.0f" % N0)
+        matches = data_hub.crns_data_frame.index.get_indexer(
+            [pd.to_datetime(calib_date, utc=True)], method="nearest"
+        )
+        data_calib_N = data_hub.crns_data_frame.iloc[matches]
 
-    st.session_state.yaml_processor.sensor_config.sensor_info.N0 = N0
+        calib_N = data_calib_N["corrected_epithermal_neutrons"]
+        N0 = calib_N / (0.0808 / (calib_sm + 0.115) + 0.372)
+        col13.write("".join([r"Estimated $N_0$", " = %.0f cph" % N0]))
+        st.session_state.yaml_processor.sensor_config.sensor_info.N0 = N0
+
+
+
+    calibrate_no()
 
     """
     ## :material/water_drop: Conversion to soil moisture
@@ -497,37 +509,55 @@ if ("yaml_processor" in st.session_state) and (
     #     data_hub.crns_data_frame["soil_moisture"] > 0.5, "soil_moisture"
     # ] = np.nan
 
-    tab6, tab7, tab8 = st.tabs(
-        [
-            ":material/Table: Final data table",
-            ":material/show_chart: Soil moisture",
-            ":material/show_chart: Measurement depth",
-        ]
-    )
+    @st.fragment
+    def make_results():
+        tab6, tab7, tab8 = st.tabs(
+            [
+                ":material/Table: Final data table",
+                ":material/show_chart: Soil moisture",
+                ":material/show_chart: Measurement depth",
+            ]
+        )
 
-    tab6.dataframe(data_hub.crns_data_frame)
+        tab6.dataframe(data_hub.crns_data_frame)
 
-    selected_columns_sm = ["soil_moisture", "crns_measurement_depth"]
+        selected_columns_sm = ["soil_moisture", "crns_measurement_depth"]
 
-    data_sm = data_hub.crns_data_frame[selected_columns_sm]
+        data_sm = data_hub.crns_data_frame[selected_columns_sm]
 
-    smooth = tab7.slider("Smoothing window in hours", 1, 25, 6)
-    tab7.plotly_chart(
-        px.line(
-            data_sm.rolling(smooth * 4).mean(), y="soil_moisture", range_y=(0, 0.5)
-        ),
-        use_container_width=True,
-    )
+        smooth = tab7.slider("Smoothing window in hours", 1, 25, 6)
+        tab7.plotly_chart(
+            px.line(
+                data_sm.rolling(smooth * 4).mean(), y="soil_moisture", range_y=(0, 0.5)
+            ),
+            use_container_width=True,
+        )
 
-    selected_columns_d = "crns_measurement_depth"
-    data_depth = data_hub.crns_data_frame[selected_columns_d]
+        selected_columns_d = "crns_measurement_depth"
+        data_depth = data_hub.crns_data_frame[selected_columns_d]
 
-    tab8.write("Representative integrated depth of the CRNS measurement in cm. ")
-    tab8.plotly_chart(
-        px.line(
-            data_sm.rolling(smooth * 4).mean(),
-            y="crns_measurement_depth",
-            range_y=(0, 50),
-        ),
-        use_container_width=True,
+        tab8.write("Representative integrated depth of the CRNS measurement in cm. ")
+        tab8.plotly_chart(
+            px.line(
+                data_sm.rolling(smooth * 4).mean(),
+                y="crns_measurement_depth",
+                range_y=(0, 50),
+            ),
+            use_container_width=True, height=300
+        )
+
+    make_results()
+
+    """
+    ## Download results
+
+    The results can be downloaded, e.g. as a CSV file:
+    """
+
+
+    st.download_button(
+        label=":material/download: Download results",
+        data=convert_df(data_hub.crns_data_frame),
+        file_name="CRNS-station_data-Hydroinnova-example.csv",
+        mime="text/csv",
     )

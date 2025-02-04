@@ -24,11 +24,18 @@ sensor_info:
 
 time_series_data:
   path_to_data: # blank if parsing raw data
-  time_step_resolution: 15mins
+  temporal:
+    input_resolution: 15mins
+    output_resolution: 1day
+    align_timestamps: false
+    alignment_method: time
+    aggregate_method: bagg
+    aggregate_func: mean
+    aggregate_maxna_fraction: 0.3
   key_column_info:
-    epithermal_neutron_counts_columns:
+    epithermal_neutron_columns:
       - N1Cts
-    thermal_neutrons:
+    thermal_neutron_columns:
     neutron_count_units: absolute_count
     pressure_columns:
       - P4_mb # first priorty goes here

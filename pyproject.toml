@@ -1,0 +1,12 @@
+   [project]
+   name = "crns-teaching"
+   version = "0.2.0"
+   dependencies = [
+       "neptoon",
+       "streamlit",
+       "pandas",
+       "plotly"
+   ]
+
+   [tool.uv]
+   override-dependencies = ["magazine==0.4.0"]

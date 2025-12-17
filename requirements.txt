@@ -1,4 +1,4 @@
 streamlit
 pandas
-neptoon==0.3.2
+neptoon==0.5.0
 plotly

@@ -1,5 +1,5 @@
 streamlit
 pandas
-magazine=0.4.0
+magazine==0.4.0
 neptoon==0.5.0
 plotly
